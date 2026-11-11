@@ -63,6 +63,8 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+      - name: Fetch upstream version tags
+        run: git fetch --tags --no-recurse-submodules https://github.com/obsproject/obs-studio.git
       - name: Restore camera dependencies
         run: |
           nuget install Microsoft.Windows.ImplementationLibrary -Version 1.0.260126.7 -OutputDirectory mf-deps -NonInteractive

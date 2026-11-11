@@ -1,7 +1,9 @@
 # OBS Windows 11 Media Foundation camera fork
 
-This branch contains an experimental Media Foundation virtual camera backend.
-It is an unvalidated source prototype, not a working Windows binary release.
+This branch contains an experimental Media Foundation virtual camera backend
+and a Windows installer build workflow. See the main [README](README.md) for
+installer downloads and current limitations. The standalone backend compiles
+and passes transport/scaling tests on Windows; app compatibility remains unverified.
 
 See [build, install and validation instructions](plugins/win-dshow/mf-virtualcam/README.md).
 

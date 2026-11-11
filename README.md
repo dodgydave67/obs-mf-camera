@@ -40,6 +40,7 @@ Follow upstream OBS Windows prerequisites, restore the NuGet dependencies in the
 [backend guide](plugins/win-dshow/mf-virtualcam/README.md), then:
 
 ```powershell
+git fetch --tags https://github.com/obsproject/obs-studio.git
 cmake --preset windows-x64 -DOBS_MF_FORK_BUILD=ON "-DOBS_MF_NUGET_ROOT=$PWD/mf-deps"
 cmake --build build_x64 --config Release --parallel
 cmake --install build_x64 --config Release --component Runtime --prefix mf-app-stage

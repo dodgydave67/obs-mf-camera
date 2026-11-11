@@ -1,6 +1,6 @@
 # Experimental OBS Media Foundation camera
 
-This is an **unvalidated source prototype**, not a tested Windows installer.
+This is an **experimental implementation**, not a validated camera compatibility release.
 It adds a Media Foundation software camera to a fork of OBS Studio so Windows 11
 camera clients can discover OBS without relying on the existing DirectShow filter.
 No custom kernel driver is involved. Windows 10 and ARM64 are outside this backend's
@@ -38,13 +38,13 @@ need reopening after starting it.
 | Check | Status |
 |---|---|
 | Portable NV12 scaling tests with AddressSanitizer and UndefinedBehaviorSanitizer | Passed on Linux; leak detection disabled because the host uses ptrace |
-| Windows MSVC build and transport tests | Added; not run in the authoring environment |
-| Full OBS build with the backend enabled | Not run |
+| Windows MSVC standalone build and transport tests | Passed on GitHub's Windows runner |
+| Full OBS build and installer | Build workflow added; inspect its latest result |
 | COM registration and activation under Frame Server's Local Service identity | Not run |
 | Windows Camera, Settings, Teams, Zoom, Discord and browsers | Not run |
 | Install, stop/start, uninstall, sleep/resume, privacy denial and multi-user isolation | Not run |
 
-The Windows build and real-device checks are release blockers. Do not describe
+The full Windows build and real-device checks are release blockers. Do not describe
 this prototype as a proven fix or distribute its DLL as a production release.
 Starting/stopping the MF controller currently waits for its worker, so native
 camera-service delays can delay OBS's start/stop operation. Production work should
@@ -67,9 +67,9 @@ ctest --test-dir build-mf -C Release --output-on-failure
 cmake --install build-mf --config Release --prefix mf-stage
 ```
 
-The `Experimental Media Foundation camera` GitHub Actions workflow performs this
-standalone build and runs the transport and scaling tests on a Windows runner.
-It produces the source DLL, not a complete OBS application. Hosted Windows Server
+The `Build OBS MF Windows installer` GitHub Actions workflow first performs this
+standalone build and runs transport and scaling tests on a Windows runner, then
+builds the full OBS application and an Inno Setup installer. Hosted Windows Server
 build success is not evidence of Windows 11 camera compatibility.
 
 ## Build the modified OBS application
@@ -81,13 +81,18 @@ required toolchain and a CMake version that supports that generator for the full
 Then configure the x64 preset with these additional options:
 
 ```powershell
+git fetch --tags https://github.com/obsproject/obs-studio.git
 cmake --preset windows-x64 -DENABLE_MF_VIRTUALCAM=ON "-DOBS_MF_NUGET_ROOT=$deps"
 cmake --build build_x64 --config RelWithDebInfo --parallel
 ```
 
 If your build environment uses a different preset/configuration, keep its normal
-settings and add the two `-D` options above. This fork does not change OBS's upstream
-installer or automatic updater, and the extra COM source requires separate setup.
+settings and add the two `-D` options above. This backend-only mode requires the
+separate COM setup described below. For a full isolated application installer,
+use `-DOBS_MF_FORK_BUILD=ON`, stage the Runtime component and run
+`installer/Build-Installer.ps1` as shown in the repository's main README.
+That mode uses separate settings, queue and DirectShow identity and disables
+the upstream updater. The installer handles COM registration automatically.
 
 ## Install the experimental media source
 
