@@ -1,9 +1,19 @@
-name: Experimental Media Foundation camera
+name: Build OBS MF Windows installer
 on:
   workflow_dispatch:
   push:
     paths:
       - 'plugins/win-dshow/mf-virtualcam/**'
+      - 'plugins/win-dshow/virtualcam*'
+      - 'plugins/win-dshow/virtualcam-module/**'
+      - 'plugins/win-dshow/CMakeLists.txt'
+      - 'shared/obs-shared-memory-queue/**'
+      - 'frontend/OBSApp.cpp'
+      - 'frontend/obs-main.cpp'
+      - 'frontend/CMakeLists.txt'
+      - 'frontend/utility/platform-windows.cpp'
+      - 'CMakeLists.txt'
+      - 'cmake/windows/architecture.cmake'
       - '.github/workflows/mf-camera.yml'
   pull_request:
     paths:
@@ -11,9 +21,13 @@ on:
       - '.github/workflows/mf-camera.yml'
 permissions:
   contents: read
+concurrency:
+  group: mf-installer-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   standalone:
     runs-on: windows-2025
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Restore media source dependencies
@@ -35,3 +49,53 @@ jobs:
         with:
           name: experimental-mf-camera-source-x64
           path: mf-stage/
+
+  installer:
+    name: Build full Windows 11 x64 installer
+    needs: standalone
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Restore camera dependencies
+        run: |
+          nuget install Microsoft.Windows.ImplementationLibrary -Version 1.0.260126.7 -OutputDirectory mf-deps -NonInteractive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          nuget install Microsoft.Windows.CppWinRT -Version 3.0.260520.1 -OutputDirectory mf-deps -NonInteractive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Configure the isolated OBS MF application
+        run: |
+          cmake --preset windows-x64 -DOBS_MF_FORK_BUILD=ON -DENABLE_MF_VIRTUALCAM=ON "-DOBS_MF_NUGET_ROOT=$PWD/mf-deps"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build full OBS application and camera source
+        run: cmake --build build_x64 --config Release --parallel
+      - name: Stage runtime
+        run: cmake --install build_x64 --config Release --component Runtime --prefix mf-app-stage
+      - name: Find Inno Setup
+        run: |
+          $compiler = @("${env:ProgramFiles(x86)}/Inno Setup 7/ISCC.exe", "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if (-not $compiler) {
+            choco install innosetup --no-progress -y
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Compile installer and SHA256 checksum
+        run: |
+          $revision = '${{ github.sha }}'.Substring(0, 9)
+          ./plugins/win-dshow/mf-virtualcam/installer/Build-Installer.ps1 -StageDir mf-app-stage -OutputDir dist -BuildRevision $revision
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBS-MF-Camera-Windows11-x64-Installer
+          path: |
+            dist/*.exe
+            dist/*.sha256
+          if-no-files-found: error
+      - name: Save build instructions
+        run: |
+          "Download OBS-MF-Camera-Windows11-x64-Installer from this run's Artifacts section. This is an unsigned experimental installer; Windows 11 app compatibility still needs manual testing." >> $env:GITHUB_STEP_SUMMARY

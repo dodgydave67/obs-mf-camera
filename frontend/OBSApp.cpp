@@ -1765,6 +1765,12 @@ vector<pair<string, string>> GetLocaleNames()
 
 int GetAppConfigPath(char *path, size_t size, const char *name)
 {
+#ifdef OBS_MF_FORK_BUILD
+	std::string fork_name = "obs-mf-camera";
+	if (name && *name)
+		fork_name += std::string("/") + name;
+	name = fork_name.c_str();
+#endif
 #if ALLOW_PORTABLE_MODE
 	if (portable_mode) {
 		if (name && *name) {
@@ -1782,6 +1788,12 @@ int GetAppConfigPath(char *path, size_t size, const char *name)
 
 char *GetAppConfigPathPtr(const char *name)
 {
+#ifdef OBS_MF_FORK_BUILD
+	std::string fork_name = "obs-mf-camera";
+	if (name && *name)
+		fork_name += std::string("/") + name;
+	name = fork_name.c_str();
+#endif
 #if ALLOW_PORTABLE_MODE
 	if (portable_mode) {
 		char path[512];

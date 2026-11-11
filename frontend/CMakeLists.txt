@@ -31,6 +31,10 @@ endif()
 add_executable(obs-studio)
 add_executable(OBS::studio ALIAS obs-studio)
 
+if(OBS_MF_FORK_BUILD)
+  target_compile_definitions(obs-studio PRIVATE OBS_MF_FORK_BUILD)
+endif()
+
 target_link_libraries(
   obs-studio
   PRIVATE

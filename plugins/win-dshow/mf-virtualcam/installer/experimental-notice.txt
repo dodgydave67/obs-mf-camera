@@ -1,0 +1,22 @@
+OBS Studio MF - Experimental Windows 11 camera build
+
+This is an independent development fork of OBS Studio. It is not an official OBS
+release. The Media Foundation camera is experimental and may fail with some apps.
+
+Setup installs the full application, Microsoft Visual C++ runtime, a separately
+registered DirectShow camera, and the Media Foundation camera source. It requires
+administrator access and Windows 11 on an x64 processor. No custom kernel driver
+is installed.
+
+The application uses its own installation and configuration directories. Existing
+OBS scenes are not imported automatically. You can export a scene collection from
+your usual OBS and import it into this build.
+
+Open OBS Studio MF, prepare a scene and click Start Virtual Camera. Then select
+OBS Studio MF (Windows Virtual Camera) in the receiving camera application. The
+new device is available while the virtual camera output is running. Windows
+camera privacy permissions still apply.
+
+The installer is unsigned unless separately signed by the fork maintainer.
+Successful compilation does not establish compatibility with Windows Camera,
+Teams, Zoom, or any particular application. Test before relying on it.

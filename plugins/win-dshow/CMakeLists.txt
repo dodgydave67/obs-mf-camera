@@ -51,6 +51,10 @@ if(TARGET OBS::virtualcam AND TARGET OBS::virtualcam-guid)
   target_link_libraries(win-dshow PRIVATE OBS::virtualcam-guid)
   target_compile_definitions(win-dshow PRIVATE VIRTUALCAM_AVAILABLE)
 
+  if(OBS_MF_FORK_BUILD)
+    target_compile_definitions(win-dshow PRIVATE OBS_MF_FORK_BUILD)
+  endif()
+
   add_dependencies(win-dshow obs-virtualcam-module)
 
   option(ENABLE_MF_VIRTUALCAM "Build experimental Windows 11 Media Foundation virtual camera" OFF)

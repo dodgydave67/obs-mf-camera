@@ -90,6 +90,10 @@ target_sources(
 target_include_directories(obs-virtualcam-module PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_compile_definitions(obs-virtualcam-module PRIVATE VIRTUALCAM_AVAILABLE)
 
+if(OBS_MF_FORK_BUILD)
+  target_compile_definitions(obs-virtualcam-module PRIVATE OBS_MF_FORK_BUILD)
+endif()
+
 target_link_libraries(
   obs-virtualcam-module
   PRIVATE

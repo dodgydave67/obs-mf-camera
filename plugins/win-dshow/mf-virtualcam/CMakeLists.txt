@@ -38,8 +38,10 @@ target_compile_options(obs-mf-camera-source PRIVATE /EHsc /bigobj /Zc:__cplusplu
 target_include_directories(obs-mf-camera-source PRIVATE "${OBS_MF_WIL_INCLUDE}" "${OBS_MF_WINRT_INCLUDE}")
 target_link_libraries(obs-mf-camera-source PRIVATE mfplat mfuuid mf mfsensorgroup windowsapp ole32 propsys)
 set_target_properties(obs-mf-camera-source PROPERTIES PREFIX "")
-install(TARGETS obs-mf-camera-source RUNTIME DESTINATION mf-camera LIBRARY DESTINATION mf-camera)
-install(FILES Install-Source.ps1 Uninstall-Source.ps1 README.md source/LICENSE.Microsoft DESTINATION mf-camera)
+install(TARGETS obs-mf-camera-source RUNTIME DESTINATION mf-camera COMPONENT Runtime
+  LIBRARY DESTINATION mf-camera COMPONENT Runtime)
+install(FILES Install-Source.ps1 Uninstall-Source.ps1 README.md source/LICENSE.Microsoft
+  DESTINATION mf-camera COMPONENT Runtime)
 
 if(BUILD_TESTING)
   add_executable(obs-mf-transport-tests tests/transport-tests.cpp)

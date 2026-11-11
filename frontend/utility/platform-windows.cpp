@@ -305,7 +305,11 @@ RunOnceMutex CheckIfAlreadyRunning(bool &already_running)
 	string name;
 
 	if (!portable_mode) {
+#ifdef OBS_MF_FORK_BUILD
+		name = "OBSStudioMFCore";
+#else
 		name = "OBSStudioCore";
+#endif
 	} else {
 		char path[500];
 		char absPath[512];

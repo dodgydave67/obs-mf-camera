@@ -4,6 +4,15 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/bootstrap.cmake" NO_POLICY_SCO
 
 project(obs-studio VERSION ${OBS_VERSION_CANONICAL})
 
+option(OBS_MF_FORK_BUILD "Build the isolated experimental OBS MF application" OFF)
+if(OBS_MF_FORK_BUILD)
+  if(NOT WIN32)
+    message(FATAL_ERROR "The OBS MF application is currently Windows only.")
+  endif()
+  set(VIRTUALCAM_GUID "703018E1-1834-48E9-8896-5EC54AA23476" CACHE STRING "Fork DirectShow camera GUID" FORCE)
+  set(ENABLE_MF_VIRTUALCAM ON CACHE BOOL "Build the Media Foundation camera" FORCE)
+endif()
+
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
   include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/windows/architecture.cmake")
   if(NOT OBS_PARENT_ARCHITECTURE STREQUAL CMAKE_VS_PLATFORM_NAME)

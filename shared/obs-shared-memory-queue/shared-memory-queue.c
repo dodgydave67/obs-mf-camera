@@ -2,7 +2,11 @@
 #include "shared-memory-queue.h"
 #include "tiny-nv12-scale.h"
 
+#ifdef OBS_MF_FORK_BUILD
+#define VIDEO_NAME L"OBSMFVirtualCamVideo"
+#else
 #define VIDEO_NAME L"OBSVirtualCamVideo"
+#endif
 
 enum queue_type {
 	SHARED_QUEUE_TYPE_VIDEO,

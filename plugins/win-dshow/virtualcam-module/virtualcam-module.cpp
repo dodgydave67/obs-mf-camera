@@ -1,6 +1,12 @@
 #include "virtualcam-filter.hpp"
 #include "virtualcam-guid.h"
 
+#ifdef OBS_MF_FORK_BUILD
+#define OBS_VIRTUALCAM_FRIENDLY_NAME L"OBS MF DirectShow Camera"
+#else
+#define OBS_VIRTUALCAM_FRIENDLY_NAME L"OBS Virtual Camera"
+#endif
+
 /* ========================================================================= */
 
 static const REGPINTYPES AMSMediaTypesV = {&MEDIATYPE_Video, &MEDIASUBTYPE_NV12};
@@ -160,7 +166,7 @@ static bool RegServers(bool reg)
 	}
 
 	if (reg) {
-		return RegServer(CLSID_OBS_VirtualVideo, L"OBS Virtual Camera", file);
+		return RegServer(CLSID_OBS_VirtualVideo, OBS_VIRTUALCAM_FRIENDLY_NAME, file);
 	} else {
 		return UnregServer(CLSID_OBS_VirtualVideo);
 	}
@@ -184,7 +190,7 @@ static bool RegFilters(bool reg)
 		rf2.cPins = 1;
 		rf2.rgPins = &AMSPinVideo;
 
-		hr = fm->RegisterFilter(CLSID_OBS_VirtualVideo, L"OBS Virtual Camera", &moniker,
+		hr = fm->RegisterFilter(CLSID_OBS_VirtualVideo, OBS_VIRTUALCAM_FRIENDLY_NAME, &moniker,
 					&CLSID_VideoInputDeviceCategory, nullptr, &rf2);
 		if (FAILED(hr)) {
 			return false;
