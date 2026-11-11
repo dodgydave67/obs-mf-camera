@@ -90,6 +90,10 @@ jobs:
         run: |
           $revision = '${{ github.sha }}'.Substring(0, 9)
           ./plugins/win-dshow/mf-virtualcam/installer/Build-Installer.ps1 -StageDir mf-app-stage -OutputDir dist -BuildRevision $revision
+      - name: Test install and uninstall on the disposable runner
+        run: |
+          $setup = Get-ChildItem -LiteralPath dist -Filter '*Setup.exe' | Select-Object -First 1
+          ./plugins/win-dshow/mf-virtualcam/installer/Test-Installer.ps1 -Installer $setup.FullName
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
