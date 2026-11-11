@@ -2,12 +2,18 @@
 #include <util/platform.h>
 #include "util/threading.h"
 #include "shared-memory-queue.h"
+#ifdef OBS_MF_VIRTUALCAM
+#include "mf-virtualcam/bridge.h"
+#endif
 
 struct virtualcam_data {
 	obs_output_t *output;
 	video_queue_t *vq;
 	volatile bool active;
 	volatile bool stopping;
+#ifdef OBS_MF_VIRTUALCAM
+	struct obs_mf_camera *mf_camera;
+#endif
 };
 
 static const char *virtualcam_name(void *unused)
@@ -20,6 +26,9 @@ static void virtualcam_destroy(void *data)
 {
 	struct virtualcam_data *vcam = (struct virtualcam_data *)data;
 	video_queue_close(vcam->vq);
+#ifdef OBS_MF_VIRTUALCAM
+	obs_mf_camera_stop(vcam->mf_camera);
+#endif
 	bfree(data);
 }
 
@@ -62,6 +71,15 @@ static bool virtualcam_start(void *data)
 	vsi.height = height;
 	obs_output_set_video_conversion(vcam->output, &vsi);
 
+#ifdef OBS_MF_VIRTUALCAM
+	long mf_error = 0;
+	vcam->mf_camera = obs_mf_camera_start(width, height, &mf_error);
+	if (!vcam->mf_camera)
+		blog(LOG_WARNING, "Media Foundation camera unavailable (0x%08lx); DirectShow output continues", mf_error);
+	else
+		blog(LOG_INFO, "Media Foundation camera started (1280x720 NV12)");
+#endif
+
 	os_atomic_set_bool(&vcam->active, true);
 	os_atomic_set_bool(&vcam->stopping, false);
 	blog(LOG_INFO, "Virtual output started");
@@ -72,6 +90,10 @@ static bool virtualcam_start(void *data)
 static void virtualcam_deactive(struct virtualcam_data *vcam)
 {
 	obs_output_end_data_capture(vcam->output);
+#ifdef OBS_MF_VIRTUALCAM
+	obs_mf_camera_stop(vcam->mf_camera);
+	vcam->mf_camera = NULL;
+#endif
 	video_queue_close(vcam->vq);
 	vcam->vq = NULL;
 
@@ -107,6 +129,9 @@ static void virtual_video(void *param, struct video_data *frame)
 	}
 
 	video_queue_write(vcam->vq, frame->data, frame->linesize, frame->timestamp);
+#ifdef OBS_MF_VIRTUALCAM
+	obs_mf_camera_frame(vcam->mf_camera, frame->data, frame->linesize);
+#endif
 }
 
 struct obs_output_info virtualcam_info = {

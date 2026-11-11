@@ -1,0 +1,37 @@
+name: Experimental Media Foundation camera
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'plugins/win-dshow/mf-virtualcam/**'
+      - '.github/workflows/mf-camera.yml'
+  pull_request:
+    paths:
+      - 'plugins/win-dshow/mf-virtualcam/**'
+      - '.github/workflows/mf-camera.yml'
+permissions:
+  contents: read
+jobs:
+  standalone:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore media source dependencies
+        shell: pwsh
+        run: |
+          nuget install Microsoft.Windows.ImplementationLibrary -Version 1.0.260126.7 -OutputDirectory mf-deps -NonInteractive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          nuget install Microsoft.Windows.CppWinRT -Version 3.0.260520.1 -OutputDirectory mf-deps -NonInteractive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Configure
+        run: cmake -S plugins/win-dshow/mf-virtualcam -B build-mf -A x64 -DOBS_MF_NUGET_ROOT="${{ github.workspace }}/mf-deps" -DBUILD_TESTING=ON
+      - name: Build source, bridge and tests
+        run: cmake --build build-mf --config Release --parallel
+      - name: Test transport and scaling
+        run: ctest --test-dir build-mf -C Release --output-on-failure
+      - name: Stage source package
+        run: cmake --install build-mf --config Release --prefix mf-stage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: experimental-mf-camera-source-x64
+          path: mf-stage/
