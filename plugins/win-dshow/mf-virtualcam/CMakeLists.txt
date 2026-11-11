@@ -16,8 +16,11 @@ endif()
 set(OBS_MF_NUGET_ROOT "" CACHE PATH "Directory holding restored Microsoft.Windows.* NuGet packages")
 find_path(OBS_MF_WIL_INCLUDE wil/cppwinrt.h
   HINTS "${OBS_MF_NUGET_ROOT}/Microsoft.Windows.ImplementationLibrary.1.0.260126.7/include" REQUIRED)
-find_path(OBS_MF_WINRT_INCLUDE winrt/base.h
-  HINTS "${OBS_MF_NUGET_ROOT}/Microsoft.Windows.CppWinRT.3.0.260520.1/include" REQUIRED)
+find_program(OBS_MF_CPPWINRT_TOOL cppwinrt.exe
+  HINTS "${OBS_MF_NUGET_ROOT}/Microsoft.Windows.CppWinRT.3.0.260520.1/bin" REQUIRED)
+set(OBS_MF_WINRT_INCLUDE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+execute_process(COMMAND "${OBS_MF_CPPWINRT_TOOL}" -base -output "${OBS_MF_WINRT_INCLUDE}"
+  COMMAND_ERROR_IS_FATAL ANY)
 
 add_library(obs-mf-camera-transport STATIC transport.cpp)
 target_compile_features(obs-mf-camera-transport PUBLIC cxx_std_17)
